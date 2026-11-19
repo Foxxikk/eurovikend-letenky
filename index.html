@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hlídač letenek – eurovíkend</title>
+<meta name="description" content="Nejlevnější víkendové letenky pro partu z Prahy a z Moravy">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>✈️</text></svg>">
+<style>
+:root{--bg:#f6f4ef;--card:#fff;--ink:#1b1f24;--mute:#6b7280;--line:#e6e2d9;--acc:#ff6a2b;--ok:#0f8a5f;--okbg:#e6f6ef;--warn:#b45309;--warnbg:#fff4e0}
+@media (prefers-color-scheme:dark){:root{--bg:#121417;--card:#1b1e23;--ink:#eceae6;--mute:#9aa0a8;--line:#2a2e35;--okbg:#10291f;--warnbg:#2c2210}}
+*{box-sizing:border-box}
+body{margin:0;font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--ink)}
+.wrap{max-width:900px;margin:0 auto;padding:20px 16px 60px}
+h1{font-size:26px;margin:4px 0 2px;letter-spacing:-.02em}
+.sub{color:var(--mute);margin:0 0 18px}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;margin-bottom:16px}
+label{font-size:12px;color:var(--mute);display:block;margin-bottom:4px;text-transform:uppercase;letter-spacing:.04em}
+select,input[type=number]{width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:9px;background:var(--bg);color:var(--ink);font:inherit}
+.chk{display:flex;gap:8px;align-items:center;font-size:14px;grid-column:1/-1}
+.note{background:var(--warnbg);color:var(--warn);border-radius:10px;padding:10px 12px;margin-bottom:14px;font-size:14px}
+.hero{background:var(--card);border:2px solid var(--acc);border-radius:16px;padding:16px;margin-bottom:18px}
+.hero .tag{display:inline-block;background:var(--acc);color:#fff;font-weight:700;font-size:12px;padding:3px 9px;border-radius:99px;margin-bottom:8px}
+.hero h2{margin:0 0 4px;font-size:22px}
+.total{font-size:14px;color:var(--mute)}
+.row{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin-bottom:10px}
+.head{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap}
+.date{font-weight:700;font-size:16px}
+.pat{color:var(--mute);font-size:13px;margin-left:6px}
+.sum{font-weight:700;white-space:nowrap}
+.sum small{font-weight:400;color:var(--mute)}
+.grp{display:grid;grid-template-columns:76px 1fr auto;gap:6px 10px;align-items:center;margin-top:8px;font-size:14px}
+.gname{font-weight:600}
+.fl{color:var(--ink)}
+.fl .tr{color:var(--mute);font-size:12.5px;display:block}
+.price{text-align:right;white-space:nowrap}
+.price b{display:block}
+.badge{font-size:11px;padding:2px 7px;border-radius:99px;font-weight:600}
+.in{background:var(--okbg);color:var(--ok)} .out{background:var(--warnbg);color:var(--warn)}
+.links{margin-top:8px;display:flex;gap:8px;flex-wrap:wrap}
+.links a{font-size:13px;color:var(--acc);text-decoration:none;border:1px solid var(--line);padding:5px 10px;border-radius:99px}
+.est{color:var(--mute);font-style:italic}
+#status{color:var(--mute);padding:20px 0;text-align:center}
+footer{color:var(--mute);font-size:12.5px;margin-top:24px;line-height:1.6}
+.more{display:block;width:100%;padding:11px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--ink);font:inherit;cursor:pointer}
+@media (max-width:520px){.grp{grid-template-columns:60px 1fr auto}h1{font-size:22px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>✈️ Hlídač letenek na eurovíkend</h1>
+  <p class="sub">Nejlevnější víkendy pro partu z Prahy a z Moravy (Krakov, Katovice, Vídeň, Bratislava, Brno, Ostrava). Ceny Ryanairu, aktualizace každé ~3 hodiny.</p>
+
+  <div class="panel">
+    <div><label for="dest">Kam</label><select id="dest"></select></div>
+    <div><label for="nP">Z Prahy (osob)</label><input id="nP" type="number" min="0" max="20" value="2"></div>
+    <div><label for="nM">Z Moravy (osob)</label><input id="nM" type="number" min="0" max="20" value="6"></div>
+    <div><label for="budget">Rozpočet / os.</label><input id="budget" type="number" step="100" value="2000"></div>
+    <div><label for="estP">Odhad Praha, když RyanAir nelétá</label><input id="estP" type="number" step="100" value="2500"></div>
+    <div><label for="minDays">Nejdřív za (dní)</label><input id="minDays" type="number" min="0" max="120" value="14"></div>
+    <label class="chk"><input id="onlyBudget" type="checkbox"> Jen termíny, kde letenka Moravy vyjde do rozpočtu</label>
+  </div>
+
+  <div id="note" class="note" hidden></div>
+  <div id="hero"></div>
+  <div id="list"></div>
+  <div id="status">Načítám ceny…</div>
+
+  <footer>
+    Ceny jsou nejnižší tarif Ryanairu pro <b>1 osobu bez zavazadla</b> (jen malá taška pod sedadlo), zpáteční. Pro víc lidí najednou může být cena vyšší – po dohodě kupte co nejdřív.
+    „Přesun“ je hrubý odhad zpáteční cesty z letiště do centra na osobu. Wizz Air, Transavia, KLM ani easyJet tu nejsou – pro Pražáky ověřte přes Google Flights (odkaz u termínu).
+    <br><span id="gen"></span>
+  </footer>
+</div>
+<script>
+const $ = (id) => document.getElementById(id);
+const fmt = (n) => n.toLocaleString("cs-CZ") + " Kč";
+const dny = ["ne","po","út","st","čt","pá","so"];
+const dfmt = (s) => { const d = new Date(s + "T12:00:00"); return `${dny[d.getDay()]} ${d.getDate()}. ${d.getMonth()+1}.`; };
+const params = new URLSearchParams(location.search);
+for (const k of ["nP","nM","budget","estP","minDays"]) if (params.get(k)) $(k).value = params.get(k);
+if (params.get("only") === "1") $("onlyBudget").checked = true;
+let data = null, shown = 20;
+
+async function load() {
+  const dest = $("dest").value || params.get("dest") || "AMS";
+  $("status").textContent = "Načítám ceny…"; $("status").hidden = false; $("list").innerHTML = ""; $("hero").innerHTML = "";
+  try {
+    const r = await fetch(`/api/scan?dest=${dest}&months=6&minDays=${$("minDays").value || 14}`);
+    data = await r.json();
+    if (!$("dest").options.length) {
+      for (const [k, v] of Object.entries(data.dests)) $("dest").add(new Option(v, k, false, k === data.dest));
+    }
+    $("note").hidden = !data.note; $("note").textContent = data.note ? "⚠️ " + data.note : "";
+    $("gen").textContent = "Data z " + new Date(data.generated).toLocaleString("cs-CZ") + " · linky: " + (data.routes.join(", ") || "žádné");
+    shown = 20; render();
+  } catch (e) { $("status").textContent = "Ceny se nepodařilo načíst, zkuste obnovit stránku."; }
+}
+
+function score(r) {
+  const nP = +$("nP").value || 0, nM = +$("nM").value || 0, est = +$("estP").value || 0;
+  if (nM && !r.morava) return null;
+  const p = nP ? (r.praha ? r.praha.door : est + 400) : 0;
+  return { total: nP * p + nM * (nM ? r.morava.door : 0), pEst: nP && !r.praha };
+}
+
+function ryLink(g, r, n) {
+  return `https://www.ryanair.com/cz/cs/trip/flights/select?adults=${n}&teens=0&children=0&infants=0&dateOut=${r.start}&dateIn=${r.ret}&isConnectedFlight=false&isReturn=true&discount=0&originIata=${g.from}&destinationIata=${g.to}`;
+}
+function gfLink(r) {
+  const to = { AMS:"AMS", BCN:"BCN", ROM:"ROM", MIL:"MIL", LON:"LON", PAR:"PAR", LIS:"LIS", DUB:"DUB", MAD:"MAD", NAP:"NAP", MLA:"MLA" }[data.dest];
+  return `https://www.google.com/travel/flights?q=${encodeURIComponent(`Flights from PRG to ${to} on ${r.start} through ${r.ret}`)}&curr=CZK&hl=cs`;
+}
+
+function grp(name, g, n, budget, est, r) {
+  if (!n) return "";
+  if (!g) return `<div class="grp"><div class="gname">${name}</div><div class="fl est">Ryanair v tento den nelétá – ověřit jinde</div><div class="price est">~${fmt(est)}</div></div>`;
+  const ok = g.flight <= budget;
+  return `<div class="grp"><div class="gname">${name}</div>
+    <div class="fl">${g.from} ${g.out.t} → ${g.to} · zpět ${g.back.t}<span class="tr">${fmt(g.out.p)} + ${fmt(g.back.p)} · přesun ~${fmt(g.transfer)} (${g.transferNote})</span></div>
+    <div class="price"><b>${fmt(g.flight)}</b><span class="badge ${ok ? "in" : "out"}">${ok ? "v rozpočtu" : "nad rozpočet"}</span></div></div>`;
+}
+
+function card(r, hero) {
+  const nP = +$("nP").value || 0, nM = +$("nM").value || 0, budget = +$("budget").value || 0, est = +$("estP").value || 0;
+  const s = r._s, ppl = nP + nM;
+  const links = [];
+  if (nM && r.morava) links.push(`<a href="${ryLink(r.morava, r, nM)}" target="_blank" rel="noopener">Koupit Morava (${nM}×) ↗</a>`);
+  if (nP && r.praha) links.push(`<a href="${ryLink(r.praha, r, nP)}" target="_blank" rel="noopener">Koupit Praha (${nP}×) ↗</a>`);
+  if (nP) links.push(`<a href="${gfLink(r)}" target="_blank" rel="noopener">Praha – Google Flights ↗</a>`);
+  const body = `<div class="head"><div><span class="date">${dfmt(r.start)} – ${dfmt(r.ret)}</span><span class="pat">${r.pattern} · ${r.nights} noci</span></div>
+     <div class="sum">${fmt(s.total)} <small>celá parta${s.pEst ? " (Praha odhad)" : ""} · ~${fmt(Math.round(s.total / Math.max(ppl,1)))}/os. vč. přesunu</small></div></div>
+     ${grp("Morava", r.morava, nM, budget, est, r)}${grp("Praha", r.praha, nP, budget, est, r)}
+     <div class="links">${links.join("")}</div>`;
+  return hero ? `<div class="hero"><span class="tag">🏆 DOPORUČENÝ TERMÍN</span>${body}</div>` : `<div class="row">${body}</div>`;
+}
+
+function render() {
+  const budget = +$("budget").value || 0, only = $("onlyBudget").checked;
+  let rows = data.rows.map((r) => ({ ...r, _s: score(r) })).filter((r) => r._s);
+  if (only) rows = rows.filter((r) => !r.morava || r.morava.flight <= budget);
+  rows.sort((a, b) => a._s.total - b._s.total);
+  $("status").hidden = rows.length > 0;
+  if (!rows.length) { $("status").textContent = "Pro zadané podmínky nic nevychází – zkuste jinou destinaci nebo vypnout filtr rozpočtu."; $("hero").innerHTML = $("list").innerHTML = ""; return; }
+  $("hero").innerHTML = card(rows[0], true);
+  $("list").innerHTML = rows.slice(1, shown).map((r) => card(r)).join("") +
+    (rows.length > shown ? `<button class="more" onclick="shown+=20;render()">Zobrazit další (${rows.length - shown})</button>` : "");
+  const u = new URLSearchParams({ dest: data.dest, nP: $("nP").value, nM: $("nM").value, budget: $("budget").value, estP: $("estP").value, minDays: $("minDays").value, only: only ? 1 : 0 });
+  history.replaceState(null, "", "?" + u);
+}
+
+$("dest").addEventListener("change", load);
+$("minDays").addEventListener("change", load);
+for (const k of ["nP","nM","budget","estP","onlyBudget"]) $(k).addEventListener("input", () => data && render());
+load();
+</script>
+</body>
+</html>
